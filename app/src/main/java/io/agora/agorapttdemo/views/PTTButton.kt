@@ -1,7 +1,10 @@
 package io.agora.agorapttdemo.views
 
 import android.content.res.Resources
+import android.util.Log
+import android.view.MotionEvent
 import androidx.compose.animation.animateColor
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -9,11 +12,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,46 +33,64 @@ import io.agora.agorapttdemo.viewmodels.PTTButtonViewModel
 import io.agora.agorapttdemo.viewmodels.PTTState
 import kotlin.math.min
 
+private val tag = "PTTButton"
+
+
+@ExperimentalComposeUiApi
 @Composable
 fun PTTButton(pttButtonViewModel: PTTButtonViewModel = viewModel()) {
-    val config = LocalConfiguration.current
-    val minDim = min(config.screenWidthDp, config.screenHeightDp)
-    val buttonState = pttButtonViewModel.state.observeAsState(initial = PTTState.INACTIVE)
-
+    val buttonState: PTTState by pttButtonViewModel.state.observeAsState(initial = PTTState.INACTIVE)
     val infiniteTransition = rememberInfiniteTransition()
-    val color: Color = when(buttonState.value) {
+    val connectingColor by infiniteTransition.animateColor(
+        initialValue = MaterialTheme.colors.primary,
+        targetValue = MaterialTheme.colors.secondary,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 500,
+                easing = LinearOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    val color: Color = when(buttonState) {
         PTTState.INACTIVE -> Color.Gray
         PTTState.BROADCASTING -> MaterialTheme.colors.primary
         PTTState.RECEIVING -> MaterialTheme.colors.secondary
-        PTTState.CONNECTING -> infiniteTransition.animateColor(
-            initialValue = MaterialTheme.colors.primary,
-            targetValue = MaterialTheme.colors.secondary,
-            animationSpec = infiniteRepeatable(
-                animation = tween(
-                    durationMillis = 500,
-                    easing = LinearOutSlowInEasing
-                ),
-                repeatMode = RepeatMode.Reverse
-            )
-        ).value
+        PTTState.CONNECTING -> connectingColor
     }
 
-        Surface(
-            modifier = Modifier
-                .size(minDim.dp - 20.dp)
-                .clip(CircleShape),
-            color = color
-        ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("PTT", fontSize = 25.sp, fontWeight = FontWeight.ExtraBold)
-            }
+    val config = LocalConfiguration.current
+    val minDim = min(config.screenWidthDp, config.screenHeightDp)
 
+    Surface(
+        modifier = Modifier
+            .size(minDim.dp - 20.dp)
+            .clip(CircleShape)
+            .pointerInteropFilter {
+                when (it.action) {
+                    MotionEvent.ACTION_DOWN -> pttButtonViewModel.pttPushed()
+                    MotionEvent.ACTION_MOVE -> {
+                        Log.i(tag, "Move ${it.x}, ${it.y}")
+                    }
+                    MotionEvent.ACTION_UP -> pttButtonViewModel.pttStop()
+                    else -> false
+                }
+                true
+            },
+        color = color
+    ) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("PTT", fontSize = 25.sp, fontWeight = FontWeight.ExtraBold)
         }
+
+    }
 }
 
+@ExperimentalComposeUiApi
 @Preview("Unpressed PTT Button", showBackground = true)
 @Composable
 fun PTTButtonPreview() {
@@ -75,6 +101,7 @@ fun PTTButtonPreview() {
     }
 }
 
+@ExperimentalComposeUiApi
 @Preview("Connecting PTT Button", showBackground = true)
 @Composable
 fun ConnectingPTTButtonPreview() {
@@ -85,6 +112,7 @@ fun ConnectingPTTButtonPreview() {
     }
 }
 
+@ExperimentalComposeUiApi
 @Preview("Broadcasting PTT Button", showBackground = true)
 @Composable
 fun BroadcastingPTTButtonPreview() {
@@ -95,6 +123,7 @@ fun BroadcastingPTTButtonPreview() {
     }
 }
 
+@ExperimentalComposeUiApi
 @Preview("Receiving PTT Button", showBackground = true)
 @Composable
 fun ReceivingPTTButtonPreview() {
