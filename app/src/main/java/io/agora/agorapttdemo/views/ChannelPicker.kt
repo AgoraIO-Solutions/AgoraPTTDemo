@@ -11,11 +11,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.agora.agorapttdemo.ui.theme.AgoraPTTDemoTheme
-import io.agora.agorapttdemo.viewmodels.ChannelConfigurationViewModel
-import io.agora.agorapttdemo.viewmodels.ChannelConfigurationViewModel.ChannelType
+import io.agora.agorapttdemo.viewmodels.PTTButtonViewModel.ChannelType
+import io.agora.agorapttdemo.viewmodels.PTTButtonViewModel
 
 @Composable
-fun ChannelPicker(viewModel: ChannelConfigurationViewModel = viewModel()) {
+fun ChannelPicker(viewModel: PTTButtonViewModel = viewModel()) {
     val channelType = viewModel.channelType.observeAsState()
     val coldBackground = if (channelType.value == ChannelType.COLD) MaterialTheme.colors.primary else MaterialTheme.colors.secondary
     val hotBackground = if (channelType.value == ChannelType.HOT) MaterialTheme.colors.primary else MaterialTheme.colors.secondary

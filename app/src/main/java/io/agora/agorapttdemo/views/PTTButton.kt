@@ -1,26 +1,20 @@
 package io.agora.agorapttdemo.views
 
-import android.content.res.Resources
 import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +28,6 @@ import io.agora.agorapttdemo.viewmodels.PTTState
 import kotlin.math.min
 
 private val tag = "PTTButton"
-
 
 @ExperimentalComposeUiApi
 @Composable
@@ -71,7 +64,7 @@ fun PTTButton(pttButtonViewModel: PTTButtonViewModel = viewModel()) {
                 when (it.action) {
                     MotionEvent.ACTION_DOWN -> pttButtonViewModel.pttPushed()
                     MotionEvent.ACTION_MOVE -> {
-                        Log.i(tag, "Move ${it.x}, ${it.y}")
+                        Log.i(tag, "Move (${it.x}, ${it.y})")
                     }
                     MotionEvent.ACTION_UP -> pttButtonViewModel.pttStop()
                     else -> false
@@ -89,6 +82,8 @@ fun PTTButton(pttButtonViewModel: PTTButtonViewModel = viewModel()) {
 
     }
 }
+
+/* TODO: Fix previews
 
 @ExperimentalComposeUiApi
 @Preview("Unpressed PTT Button", showBackground = true)
@@ -133,3 +128,7 @@ fun ReceivingPTTButtonPreview() {
         }
     }
 }
+
+
+
+ */

@@ -13,10 +13,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.agora.agorapttdemo.ui.theme.AgoraPTTDemoTheme
-import io.agora.agorapttdemo.viewmodels.ChannelConfigurationViewModel
+import io.agora.agorapttdemo.viewmodels.PTTButtonViewModel
 
 @Composable
-fun AlerterSelector(viewModel: ChannelConfigurationViewModel = viewModel()) {
+fun AlerterSelector(viewModel: PTTButtonViewModel = viewModel()) {
     val alertsOn = viewModel.alertsOn.observeAsState(true)
     Surface {
         Row {

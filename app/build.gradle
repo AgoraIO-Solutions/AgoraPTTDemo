@@ -5,6 +5,9 @@ plugins {
     id 'dagger.hilt.android.plugin'
 }
 
+def localProperties = new Properties()
+localProperties.load(new FileInputStream(rootProject.file("local.properties")))
+
 android {
     compileSdk 32
 
@@ -22,7 +25,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            resValue('string', 'pubnub_publish', localProperties['pubnub.publish'])
+            resValue('string', 'pubnub_subscribe', localProperties['pubnub.subscribe'])
+            resValue('string', 'agora_app_id', localProperties['agora.appId'])
+            resValue('string', 'test_channel', localProperties['test.channel'])
+        }
+
         release {
+            // NOTE: Not setup for this
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -53,10 +64,12 @@ dependencies {
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.material:material:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
+
     implementation 'androidx.activity:activity-compose:1.3.1'
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07"
     implementation "androidx.compose.runtime:runtime-livedata:1.2.0-alpha01"
+    def lifecycle_version = "2.5.0-alpha02"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
 
     // JSON
     implementation 'com.google.code.gson:gson:2.8.9'
