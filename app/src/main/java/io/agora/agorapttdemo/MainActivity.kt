@@ -1,5 +1,7 @@
 package io.agora.agorapttdemo
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +14,8 @@ import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import io.agora.agorapttdemo.ui.theme.AgoraPTTDemoTheme
 import io.agora.agorapttdemo.views.PTTScreen
@@ -20,11 +24,25 @@ import io.agora.agorapttdemo.views.PTTScreen
 class MainActivity : ComponentActivity() {
     @ExperimentalComposeUiApi
     override fun onCreate(savedInstanceState: Bundle?) {
+        checkSelfPermission(Manifest.permission.RECORD_AUDIO, PERMISSIONREQIDRECORDAUDIO)
         super.onCreate(savedInstanceState)
         setContent {
             AgoraPTTDemoTheme {
                PTTScreen()
             }
         }
+    }
+
+    private val PERMISSIONREQIDRECORDAUDIO = 22
+
+    private fun checkSelfPermission(permission: String, requestCode: Int): Boolean {
+        if (ContextCompat.checkSelfPermission(this, permission) !=
+            PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(permission),
+                requestCode)
+            return false
+        }
+        return true
     }
 }

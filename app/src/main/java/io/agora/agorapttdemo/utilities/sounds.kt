@@ -3,6 +3,7 @@ package io.agora.agorapttdemo.utilities
 import android.content.Context
 import android.media.MediaPlayer
 import android.media.PlaybackParams
+import android.util.Log
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -51,6 +52,7 @@ class AlerterModule {
     }
 }
 
+private val tag = "Alerter"
 class Alerter @Inject constructor(type: Type, context: Context) {
     private val mediaPlayer = MediaPlayer.create(context, when(type) {
         Type.Connect -> R.raw.connecting_sound
@@ -70,8 +72,13 @@ class Alerter @Inject constructor(type: Type, context: Context) {
     }
 
     fun stop() {
-        mediaPlayer.stop()
-        mediaPlayer.reset()
-        mediaPlayer.prepare()
+        if (!mediaPlayer.isPlaying) return
+        try {
+            mediaPlayer.stop()
+            mediaPlayer.reset()
+            mediaPlayer.prepare()
+        } catch(th: Throwable) {
+            Log.e(tag, "Error $th" )
+        }
     }
 }

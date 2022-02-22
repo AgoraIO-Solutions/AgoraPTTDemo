@@ -74,6 +74,9 @@ dependencies {
     // JSON
     implementation 'com.google.code.gson:gson:2.8.9'
 
+    // JODA
+    implementation 'net.danlew:android.joda:2.10.12.2'
+
     // PubNub
     implementation 'com.pubnub:pubnub-kotlin:6.3.0'
 

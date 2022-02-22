@@ -25,6 +25,7 @@ class VoiceManagerModule {
 
 private val tag = "VoiceManager"
 class VoiceManager @Inject constructor(val config: Config, context: Context): IRtcEngineEventHandler()  {
+    var isHot: Boolean = false
     private lateinit var rtcEngine: RtcEngine
     //var currentMessage: Message? = null
     private var hotCallback: (() -> Unit) ? = null
@@ -54,6 +55,11 @@ class VoiceManager @Inject constructor(val config: Config, context: Context): IR
     override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
         Log.i(tag, "successfully joined channel with UID $uid")
         hotCallback?.invoke()
+        isHot = true
+    }
+
+    override fun onLeaveChannel(stats: RtcStats?) {
+        isHot = false
     }
 
     override fun onFirstLocalAudioFramePublished(elapsed: Int) {

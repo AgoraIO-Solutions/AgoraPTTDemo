@@ -64,7 +64,7 @@ fun PTTButton(pttButtonViewModel: PTTButtonViewModel = viewModel()) {
                 when (it.action) {
                     MotionEvent.ACTION_DOWN -> pttButtonViewModel.pttPushed()
                     MotionEvent.ACTION_MOVE -> {
-                        Log.i(tag, "Move (${it.x}, ${it.y})")
+                       /* noop */
                     }
                     MotionEvent.ACTION_UP -> pttButtonViewModel.pttStop()
                     else -> false
