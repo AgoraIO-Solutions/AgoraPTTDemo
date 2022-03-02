@@ -27,4 +27,6 @@ class Config(context: Context) {
     val pnSub = context.getString(R.string.pubnub_subscribe)
     val tempToken: String? = null
     val uuid = UUID.randomUUID()
+    val hotChannelTimeout = context.resources.getInteger(R.integer.hot_channel_timeout)
+    val coldChannelTimeout = context.resources.getInteger(R.integer.cold_channel_timeout)
 }

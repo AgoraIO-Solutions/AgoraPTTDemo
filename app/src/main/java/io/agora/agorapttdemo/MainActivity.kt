@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -18,10 +19,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import io.agora.agorapttdemo.ui.theme.AgoraPTTDemoTheme
+import io.agora.agorapttdemo.viewmodels.PTTButtonViewModel
 import io.agora.agorapttdemo.views.PTTScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val pttButtonViewModel: PTTButtonViewModel by viewModels()
+
     @ExperimentalComposeUiApi
     override fun onCreate(savedInstanceState: Bundle?) {
         checkSelfPermission(Manifest.permission.RECORD_AUDIO, PERMISSIONREQIDRECORDAUDIO)
@@ -44,5 +49,10 @@ class MainActivity : ComponentActivity() {
             return false
         }
         return true
+    }
+
+    override fun onStop() {
+        super.onStop()
+        pttButtonViewModel.pttStop()
     }
 }

@@ -28,8 +28,8 @@ import kotlin.math.sign
 class ChannelLockModule {
     @Provides
     @Singleton
-    fun channelLock(signalingManager: SignalingManager): ChannelLock {
-        return ChannelLock(signalingManager = signalingManager)
+    fun channelLock(signalingManager: SignalingManager, voiceManager: VoiceManager): ChannelLock {
+        return ChannelLock(signalingManager = signalingManager, voiceManager = voiceManager)
     }
 }
 
@@ -47,7 +47,7 @@ private const val lockKey = "-lock-ch"
 private const val updateInterval = 500L
 
 // NOTE: Lock collision is not handled in this demo, it should be trivial to understand how it can be use ts and whichever is sooner wins
-class ChannelLock @Inject constructor(val signalingManager: SignalingManager) {
+class ChannelLock @Inject constructor(val signalingManager: SignalingManager, val voiceManager: VoiceManager) {
     enum class State {
         LOCKED, LOCKING, UNLOCKED, LOCKED_BY_OTHER
     }
@@ -111,6 +111,7 @@ class ChannelLock @Inject constructor(val signalingManager: SignalingManager) {
                 if (_stateData.value == State.LOCKED_BY_OTHER) return
                 refreshMonitor = RefreshMonitor(message)
                 safeSetState(State.LOCKED_BY_OTHER)
+                voiceManager.listen { signalingManager.sendSignal(message = message.ackBroadcast()) }
             }
             Signal.RR -> {
                 if (_stateData.value == State.LOCKED_BY_OTHER) return
@@ -151,9 +152,9 @@ class ChannelLock @Inject constructor(val signalingManager: SignalingManager) {
 
     private inner class AcquireWaiter {
         private val innerTag = "$tag:AcquireWaiter"
-        private val timer: CountDownTimer = object : CountDownTimer(500, 100) {
+        private val timer: CountDownTimer = object : CountDownTimer(2000, 100) {
             override fun onTick(p0: Long) {
-                Log.i(innerTag, "seconds until timeout $p0")
+                Log.i(innerTag, "miliseconds until timeout $p0")
             }
 
             override fun onFinish() {

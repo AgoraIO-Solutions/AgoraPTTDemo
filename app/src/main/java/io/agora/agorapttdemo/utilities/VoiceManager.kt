@@ -7,9 +7,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import io.agora.agorapttdemo.R
 import io.agora.rtc.IRtcEngineEventHandler
 import io.agora.rtc.RtcEngine
+import kotlinx.coroutines.*
+import org.joda.time.DateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,72 +24,90 @@ class VoiceManagerModule {
     }
 }
 
-private val tag = "VoiceManager"
+private const val tag = "VoiceManager"
 class VoiceManager @Inject constructor(val config: Config, context: Context): IRtcEngineEventHandler()  {
-    var isHot: Boolean = false
     private lateinit var rtcEngine: RtcEngine
-    //var currentMessage: Message? = null
-    private var hotCallback: (() -> Unit) ? = null
+    var isHot: Boolean = true
+
+    private val disconnectAfterTime: Int get() = if (isHot) config.hotChannelTimeout else config.coldChannelTimeout
+
+    private var keepAliveJob: Job? = null
+    private var lastActivity: DateTime = DateTime.now()
+    private var isConnected: Boolean = false
+    private var isBroadcasting = false
+    private var connectionCallback: (() -> Unit) ? = null
     init {
         try {
             rtcEngine = RtcEngine.create(context, config.appId, this)
         } catch (th: Throwable) {
             Log.i(tag, "Error initializing engine $th")
         }
+        rtcEngine.enableAudioVolumeIndication(1,3, true)
         rtcEngine.muteLocalAudioStream(true)
         rtcEngine.setEnableSpeakerphone(true)
     }
 
-    fun broadcast(boolean: Boolean) {
-        rtcEngine.muteLocalAudioStream(!boolean)
+    fun broadcast(on:Boolean, callback: () -> Unit) {
+        rtcEngine.muteLocalAudioStream(!on)
+        isBroadcasting = on
+        if (!on) {
+            rtcEngine.leaveChannel()
+            return callback()
+        }
+        if (isConnected) return callback()
+        connectionCallback = callback
+        connectToChannel()
     }
 
-    fun goHot(callback: () -> Unit) {
-        hotCallback = callback
+    private fun connectToChannel() {
         rtcEngine.joinChannel(config.tempToken, config.channel, "", 0)
     }
 
-    fun goCold() {
-        rtcEngine.leaveChannel()
-    }
-
-    override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
-        Log.i(tag, "successfully joined channel with UID $uid")
-        hotCallback?.invoke()
-        isHot = true
-    }
-
-    override fun onLeaveChannel(stats: RtcStats?) {
-        isHot = false
-    }
-
-    override fun onFirstLocalAudioFramePublished(elapsed: Int) {
-       // TL.i("${currentMessage?.i ?: ""} onFirstLocalAudioFramePublished: Audio sent")
-        Log.i(tag, "onFirstLocalAudioFramePublished")
-    }
-
-    override fun onFirstRemoteAudioDecoded(uid: Int, elapsed: Int) {
-        //TL.i("\"${currentMessage?.i ?: ""} onFirstRemoteAudioDecoded: Received First Audio Frame")
-        Log.i(tag, "onFirstRemoteAudioDecoded")
-    }
-
-    override fun onFirstRemoteAudioFrame(uid: Int, elapsed: Int) {
-        //TL.i("\"${currentMessage?.i ?: ""} onFirstRemoteAudioFrame: Received First Audio Frame")
-        Log.i(tag, "onFirstRemoteAudioFrame")
-    }
-
-    override fun onRemoteAudioStats(stats: IRtcEngineEventHandler.RemoteAudioStats?) {
-        //TL.i("\"${currentMessage?.i ?: ""} onRemoteAudioStats ${stats?.networkTransportDelay ?: 0L}")
-        Log.i(tag, "onRemoteAudioStats")
-    }
-
-    override fun onRemoteAudioStateChanged(uid: Int, state: Int, reason: Int, elapsed: Int) {
-        //TL.i("onRemoteAudioStateChanged uid $uid, state $state reason $reason elapsed $elapsed")
-        Log.i(tag, "onRemoteAudioStateChanged")
+    fun listen(callback: () -> Unit) {
+        isBroadcasting = false
+        rtcEngine.muteLocalAudioStream(true)
+        if (isConnected) return callback()
+        connectionCallback = callback
+        connectToChannel()
     }
 
     fun destroy() {
         rtcEngine.leaveChannel()
         RtcEngine.destroy()
+    }
+
+    // MARK: IRtcEngineEventHandler
+    override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
+        Log.i(tag, "successfully joined channel with UID $uid")
+        lastActivity = DateTime.now()
+        connectionCallback?.invoke()
+        isConnected = true
+        keepAliveJob = startKeepAliveTimer()
+    }
+
+    override fun onLeaveChannel(stats: RtcStats?) {
+        Log.i(tag, "successfully left the channel")
+        isConnected = false
+        CoroutineScope(Dispatchers.IO).launch {
+            keepAliveJob?.cancelAndJoin()
+            keepAliveJob = null
+        }
+    }
+
+    private fun startKeepAliveTimer(): Job {
+        return CoroutineScope(Dispatchers.IO).launch {
+            while (isActive) {
+                delay(3 * 1000)
+                Log.i(tag, "Checking to see if channel should disconnect")
+                if (lastActivity.isBefore(DateTime.now().minusSeconds(disconnectAfterTime)) and !isBroadcasting) {
+                    rtcEngine.leaveChannel()
+                }
+            }
+        }
+    }
+
+    override fun onAudioVolumeIndication(speakers: Array<out AudioVolumeInfo>?, totalVolume: Int) {
+        Log.i(tag, "onAudioVolume Indicator")
+        lastActivity = DateTime.now()
     }
 }

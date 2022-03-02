@@ -26,8 +26,6 @@ class PTTButtonViewModel @Inject constructor(
         COLD, HOT
     }
 
-    private var channel: Channel
-
     val channelType: MutableLiveData<ChannelType> = MutableLiveData(ChannelType.HOT)
     val alertsOn: MutableLiveData<Boolean> = MutableLiveData(true)
     var state: MutableLiveData<PTTState> = MutableLiveData(PTTState.INACTIVE)
@@ -35,14 +33,14 @@ class PTTButtonViewModel @Inject constructor(
     init {
         channelType.observeForever { onChanged(it) }
         channelLock.stateData.observeForever { onChanged(it) }
-        channel = HotChannel(voiceManager = voiceManager, pttState = state)
+        voiceManager.isHot = true
     }
 
     private fun onChanged(t: ChannelType) {
         Log.i(tag, "changing channel to $t")
-        channel = when(t) {
-            ChannelType.COLD ->  ColdChannel()
-            ChannelType.HOT -> HotChannel(voiceManager = voiceManager, pttState = state)
+        when(t) {
+            ChannelType.COLD ->  voiceManager.isHot = false
+            ChannelType.HOT -> voiceManager.isHot = true
         }
     }
 
@@ -51,8 +49,9 @@ class PTTButtonViewModel @Inject constructor(
         when(t) {
             ChannelLock.State.LOCKED -> {
                 state.value = PTTState.BROADCASTING
-                connectingSound.stop()
-                startTalking()
+                voiceManager.broadcast(true) {
+                    connectingSound.stop()
+                }
             }
             ChannelLock.State.LOCKED_BY_OTHER -> {
                 state.value = PTTState.RECEIVING
@@ -75,10 +74,14 @@ class PTTButtonViewModel @Inject constructor(
         Log.i(tag, "should start talking")
         if (alertsOn.value == true) {
             sendingSound.play {
-                channel.startTalk()
+                voiceManager.broadcast(true) {
+
+                }
             }
         } else {
-            channel.startTalk()
+            voiceManager.broadcast(true) {
+
+            }
         }
     }
 
@@ -90,9 +93,11 @@ class PTTButtonViewModel @Inject constructor(
     }
 
     fun pttStop() {
+        voiceManager.broadcast(false) {
+
+        }
         Log.i(tag, "PttButton 'Un' pushed")
         if (state.value != PTTState.CONNECTING && state.value != PTTState.BROADCASTING) return
-        channel.stopTalk()
         channelLock.releaseLock()
     }
 }

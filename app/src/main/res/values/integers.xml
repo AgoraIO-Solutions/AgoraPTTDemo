@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="hot_channel_timeout">7200</integer>
+    <integer name="cold_channel_timeout">15</integer>
+</resources>
