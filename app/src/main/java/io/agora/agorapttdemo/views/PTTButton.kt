@@ -1,6 +1,5 @@
 package io.agora.agorapttdemo.views
 
-import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
@@ -18,16 +17,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import io.agora.agorapttdemo.ui.theme.AgoraPTTDemoTheme
 import io.agora.agorapttdemo.viewmodels.PTTButtonViewModel
 import io.agora.agorapttdemo.viewmodels.PTTState
 import kotlin.math.min
-
-private val tag = "PTTButton"
 
 @ExperimentalComposeUiApi
 @Composable
@@ -83,7 +78,7 @@ fun PTTButton(pttButtonViewModel: PTTButtonViewModel = viewModel()) {
     }
 }
 
-/* TODO: Fix previews
+/* TODO: Fix previews, when we do design. This will require activities that handle HilT
 
 @ExperimentalComposeUiApi
 @Preview("Unpressed PTT Button", showBackground = true)

@@ -3,6 +3,8 @@ package io.agora.agorapttdemo
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.Window
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -31,6 +33,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         checkSelfPermission(Manifest.permission.RECORD_AUDIO, PERMISSIONREQIDRECORDAUDIO)
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContent {
             AgoraPTTDemoTheme {
                PTTScreen()

@@ -17,5 +17,3 @@ class MainApplication: Application() {
         sm.destroy()
     }
 }
-
-// TODO: Reset app on background!
